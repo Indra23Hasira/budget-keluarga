@@ -62,6 +62,26 @@
   .payday-chip small{display:block; font-weight:400; color:var(--muted); font-size:11px; margin-top:3px;}
   .payday-other{display:flex; gap:8px; align-items:center;}
   .payday-other select{margin:0; flex:1;}
+  .act-wrap{padding:40px 22px 30px; max-width:480px; margin:0 auto;}
+  .act-wrap h2{color:var(--navy); font-size:22px; margin-bottom:6px; text-align:center;}
+  .act-sub{color:var(--muted); font-size:13px; text-align:center; margin-bottom:20px; line-height:1.45;}
+  .act-price{background:var(--navy); color:#fff; border-radius:16px; padding:18px; text-align:center; margin-bottom:14px;}
+  .act-price .amt{font-size:28px; font-weight:800;}
+  .act-price .lbl{font-size:12px; opacity:0.8; margin-top:2px;}
+  .act-pay{white-space:pre-wrap; font-size:14px; color:var(--navy); line-height:1.5;}
+  .act-qris{display:block; max-width:240px; width:100%; margin:12px auto 0; border-radius:12px;}
+  .act-status{font-size:12px; color:var(--muted); text-align:center; margin:14px 0 6px; line-height:1.45;}
+  .btn-wa{background:#25D366; color:#fff;}
+  .admin-item{border-top:1px solid #EEF2F5; padding:10px 0; font-size:13px;}
+  .admin-item:first-child{border-top:none;}
+  .admin-item .em{font-weight:600; color:var(--navy); word-break:break-all;}
+  .admin-item .meta{font-size:11px; color:var(--muted); margin-top:2px; word-break:break-all;}
+  .admin-item .acts{display:flex; gap:8px; margin-top:8px;}
+  .admin-item .acts button{flex:1; padding:9px; border-radius:10px; border:none; font-size:13px; font-weight:600;}
+  .pill{display:inline-block; background:#EAF2F7; color:var(--navy); border-radius:10px; padding:1px 8px; font-size:12px; margin-left:6px;}
+  textarea.input-field{resize:vertical; font-family:inherit;}
+  .uid-line{font-size:11px; color:var(--muted); margin:-4px 0 12px; word-break:break-all;}
+  .uid-line span{text-decoration:underline; cursor:pointer; margin-left:6px;}
 
   /* Pages */
   .page{display:none; padding:16px; animation:fadein .2s ease;}
@@ -187,6 +207,29 @@
     <div class="auth-divider" style="margin-top:26px;"><span>mau lihat-lihat dulu?</span></div>
     <button class="btn-demo" onclick="startDemo()">👀 Coba Demo</button>
     <div class="demo-hint">Pakai data contoh, tanpa daftar. Tidak ada yang tersimpan.</div>
+    <div class="demo-hint" id="priceHint" style="display:none;"></div>
+  </div>
+
+  <!-- ACTIVATION SCREEN (akun sudah daftar tapi belum aktif) -->
+  <div id="activationScreen" class="act-wrap" style="display:none;">
+    <h2>Aktivasi Akun</h2>
+    <div class="act-sub">Akun <b id="actEmail"></b> sudah terdaftar. Tinggal satu langkah lagi: aktivasi sekali bayar, lalu bisa dipakai selamanya.</div>
+    <div class="act-price">
+      <div class="amt" id="actPrice">—</div>
+      <div class="lbl">sekali bayar · aktif selamanya · data tersimpan aman di akunmu</div>
+    </div>
+    <div class="pw-card">
+      <div class="field-label" style="margin-top:0;">Cara bayar</div>
+      <div class="act-pay" id="actPayInfo">Info pembayaran belum diatur.</div>
+      <img class="act-qris" id="actQris" alt="QRIS" style="display:none;">
+    </div>
+    <div class="field-label">Catatan pembayaran (opsional)</div>
+    <input class="input-field" id="actNoteInput" placeholder="mis. transfer dari BCA a.n. Budi, 3 Nov">
+    <button class="btn-primary btn-wa" onclick="confirmPaymentWA()">Sudah bayar? Konfirmasi via WhatsApp</button>
+    <div class="act-status" id="actStatus">⏳ Menunggu aktivasi. Halaman ini otomatis terbuka begitu pembayaranmu dikonfirmasi.</div>
+    <div class="uid-line" style="text-align:center;">ID akun: <b id="actUid"></b></div>
+    <button class="btn-demo" style="margin-top:6px;" onclick="startDemo()">👀 Coba Demo dulu</button>
+    <div class="auth-toggle" style="text-align:center;" onclick="signOutUser()">Keluar / ganti akun</div>
   </div>
 
   <!-- MAIN APP -->
@@ -305,6 +348,31 @@
         <button class="btn-primary" style="width:auto; padding:14px 18px;" onclick="addCategory()">+</button>
       </div>
       <div style="height:20px;"></div>
+      <div id="adminSection" style="display:none;">
+        <div class="section-label">Admin · Penjualan</div>
+        <div class="pw-card">
+          <div class="pw-head" onclick="toggleBox('adminCfgPanel', this)"><span>⚙️ Harga & Cara Bayar</span><span>▾</span></div>
+          <div id="adminCfgPanel" style="display:none; margin-top:12px;">
+            <div class="field-label">Harga aktivasi (sekali bayar)</div>
+            <input class="input-field" id="cfgPrice" type="tel" inputmode="numeric" placeholder="contoh: 49000" oninput="this.value=this.value.replace(/\D/g,'')">
+            <div class="field-label">Cara bayar (rekening / e-wallet)</div>
+            <textarea class="input-field" id="cfgPayInfo" rows="4" placeholder="BCA 1234567890 a.n. Nama Kamu&#10;DANA 08xxxxxxxxxx"></textarea>
+            <div class="field-label">Gambar QRIS (opsional)</div>
+            <input class="input-field" id="cfgQris" placeholder="contoh: qris.png">
+            <div class="field-label">Nomor WhatsApp untuk konfirmasi</div>
+            <input class="input-field" id="cfgWa" type="tel" placeholder="contoh: 081234567890">
+            <button class="btn-primary" onclick="saveAppConfig()">Simpan</button>
+          </div>
+        </div>
+        <div class="pw-card">
+          <div class="pw-head"><span>🧾 Menunggu Aktivasi <span class="pill" id="adminPendingCount">0</span></span></div>
+          <div id="adminPendingList" style="margin-top:8px;"></div>
+        </div>
+        <div class="pw-card">
+          <div class="pw-head" onclick="toggleBox('adminActiveList', this)"><span>✅ Sudah Aktif <span class="pill" id="adminActiveCount">0</span></span><span>▾</span></div>
+          <div id="adminActiveList" style="display:none; margin-top:8px;"></div>
+        </div>
+      </div>
       <div class="section-label">Siklus Gajian</div>
       <div class="pw-card">
         <div class="field-label" style="margin-top:0;">Tanggal gajian kamu</div>
@@ -315,7 +383,8 @@
       <div class="section-label">Data</div>
       <button class="btn-primary" style="background:var(--blue); color:var(--navy); margin-bottom:20px;" onclick="exportCSV()">Export Semua Transaksi ke CSV</button>
       <div class="section-label">Akun</div>
-      <div style="font-size:13px; color:var(--muted); margin-bottom:10px;" id="userEmailDisplay"></div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:6px;" id="userEmailDisplay"></div>
+      <div class="uid-line" id="uidLine">ID akun: <b id="userUidDisplay"></b><span onclick="copyUid()">salin</span></div>
       <div class="pw-card" id="pwCard">
         <div class="pw-head" onclick="togglePasswordPanel()">
           <span id="pwPanelTitle">🔒 Ganti Password</span><span id="pwPanelArrow">▾</span>
@@ -394,6 +463,11 @@ let currentUser = null;
 let DEMO_MODE = false; // true kalau sedang "Coba Demo" (data contoh, tidak ke Firebase)
 let userPayday = 25;   // tanggal gajian akun ini (1–30, 31 = akhir bulan)
 let paydayNeedsSetup = false;
+let isAdminUser = false;
+let appConfig = {};          // harga & cara bayar (config/app)
+let unsubSubscription = null; // pantau status aktivasi
+let unsubAdminSignups = null;
+let adminSignups = {};
 let isRegisterMode = false;
 let unsubTx = null;
 
@@ -639,7 +713,20 @@ window.sendResetToMe = async function(){
 async function startApp(user){
   currentUser = user;
   document.getElementById('authScreen').style.display = 'none';
+  if(!DEMO_MODE){
+    const access = await checkAccess(user);
+    isAdminUser = access.admin;
+    if(!access.active){ await showActivationScreen(user); return; }
+  } else {
+    isAdminUser = false;
+  }
+  stopSubscriptionWatch();
+  document.getElementById('activationScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('uidLine').style.display = DEMO_MODE ? 'none' : 'block';
+  document.getElementById('userUidDisplay').textContent = user.uid;
+  document.getElementById('adminSection').style.display = isAdminUser ? 'block' : 'none';
+  if(isAdminUser) startAdminPanel();
   document.getElementById('demoBanner').style.display = DEMO_MODE ? 'block' : 'none';
   document.getElementById('pwCard').style.display = DEMO_MODE ? 'none' : 'block';
   document.getElementById('userEmailDisplay').textContent = DEMO_MODE ? 'Akun Demo — data contoh, tidak tersimpan' : user.email;
@@ -661,13 +748,225 @@ onAuthStateChanged(auth, async (user)=>{
     await startApp(user);
   } else {
     currentUser = null;
+    isAdminUser = false;
+    stopSubscriptionWatch();
+    if(unsubAdminSignups){ unsubAdminSignups(); unsubAdminSignups = null; }
     document.getElementById('authScreen').style.display = 'block';
+    document.getElementById('activationScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'none';
     if(unsubTx) unsubTx();
     if(unsubAllTx) unsubAllTx();
     if(unsubReserveWithdrawals) unsubReserveWithdrawals();
   }
 });
+
+// ---------- AKTIVASI BERBAYAR ----------
+// Akun aktif kalau: admin, ATAU punya subscriptions/{uid} dengan active=true,
+// ATAU akun lama yang sudah punya data sebelum sistem berbayar (punya settings/categories).
+// Penguncian sebenarnya ada di Firestore Rules; pengecekan di sini hanya untuk tampilan.
+async function safeGet(ref){
+  try{ return await getDoc(ref); } catch(e){ return null; }
+}
+
+async function checkAccess(user){
+  const adminSnap = await safeGet(doc(db, 'admins', user.uid));
+  const admin = !!(adminSnap && adminSnap.exists());
+  if(admin) return { active: true, admin };
+  const subSnap = await safeGet(doc(db, 'subscriptions', user.uid));
+  if(subSnap && subSnap.exists()) return { active: subSnap.data().active === true, admin };
+  const catSnap = await safeGet(doc(db, 'users', user.uid, 'settings', 'categories'));
+  return { active: !!(catSnap && catSnap.exists()), admin };
+}
+
+async function loadAppConfig(){
+  const snap = await safeGet(doc(db, 'config', 'app'));
+  appConfig = (snap && snap.exists()) ? snap.data() : {};
+  return appConfig;
+}
+
+function priceText(){
+  const p = parseInt(appConfig.price);
+  return p ? formatRp(p) : '';
+}
+
+async function showPriceHint(){
+  await loadAppConfig();
+  const el = document.getElementById('priceHint');
+  const p = priceText();
+  if(p){ el.textContent = `Akun baru: aktivasi sekali bayar ${p}, aktif selamanya.`; el.style.display = 'block'; }
+}
+
+async function showActivationScreen(user){
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('activationScreen').style.display = 'block';
+  document.getElementById('actEmail').textContent = user.email || '';
+  document.getElementById('actUid').textContent = user.uid;
+
+  await loadAppConfig();
+  document.getElementById('actPrice').textContent = priceText() || 'Harga belum diatur';
+  document.getElementById('actPayInfo').textContent = appConfig.payInfo || 'Info pembayaran belum diatur.';
+  const qris = document.getElementById('actQris');
+  if(appConfig.qrisUrl){ qris.src = appConfig.qrisUrl; qris.style.display = 'block'; }
+  else qris.style.display = 'none';
+
+  // catat pendaftaran supaya muncul di daftar "Menunggu Aktivasi" milik admin
+  const signupRef = doc(db, 'signups', user.uid);
+  const existing = await safeGet(signupRef);
+  if(existing && existing.exists()){
+    const s = existing.data();
+    if(s.confirmNote) document.getElementById('actNoteInput').value = s.confirmNote;
+    if(s.status === 'inactive') document.getElementById('actStatus').textContent = '⛔ Akun ini sedang dinonaktifkan. Hubungi admin lewat WhatsApp.';
+  } else if(existing){
+    try{ await setDoc(signupRef, { email: user.email || '', status: 'pending', createdAt: serverTimestamp() }); } catch(e){}
+  }
+
+  // begitu admin mengaktifkan, langsung masuk ke app tanpa refresh
+  stopSubscriptionWatch();
+  try{
+    unsubSubscription = onSnapshot(doc(db, 'subscriptions', user.uid), (snap)=>{
+      if(snap.exists() && snap.data().active === true && currentUser && currentUser.uid === user.uid){
+        stopSubscriptionWatch();
+        showToast('Akun kamu sudah aktif 🎉');
+        startApp(user);
+      }
+    }, ()=>{});
+  } catch(e){}
+}
+
+function stopSubscriptionWatch(){
+  if(unsubSubscription){ unsubSubscription(); unsubSubscription = null; }
+}
+
+function normalizeWa(num){
+  let n = String(num || '').replace(/\D/g, '');
+  if(n.startsWith('0')) n = '62' + n.slice(1);
+  return n;
+}
+
+window.confirmPaymentWA = async function(){
+  if(!currentUser) return;
+  const note = document.getElementById('actNoteInput').value.trim();
+  try{
+    await setDoc(doc(db, 'signups', currentUser.uid), {
+      email: currentUser.email || '', status: 'pending', confirmNote: note, confirmedAt: serverTimestamp()
+    }, { merge: true });
+  } catch(e){}
+  const wa = normalizeWa(appConfig.waNumber);
+  if(!wa){ showToast('Nomor WhatsApp admin belum diatur'); return; }
+  const msg = `Halo, saya sudah bayar aktivasi Monthly Budget.\nEmail: ${currentUser.email || '-'}\nID akun: ${currentUser.uid}` + (note ? `\nCatatan: ${note}` : '');
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+window.copyUid = async function(){
+  if(!currentUser) return;
+  try{ await navigator.clipboard.writeText(currentUser.uid); showToast('ID akun disalin ✓'); }
+  catch(e){ showToast('ID akun: ' + currentUser.uid); }
+}
+
+window.toggleBox = function(id, head){
+  const box = document.getElementById(id);
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  const arrow = head && head.lastElementChild;
+  if(arrow && (arrow.textContent === '▾' || arrow.textContent === '▴')) arrow.textContent = open ? '▴' : '▾';
+}
+
+// ---------- PANEL ADMIN ----------
+async function startAdminPanel(){
+  await loadAppConfig();
+  document.getElementById('cfgPrice').value = appConfig.price || '';
+  document.getElementById('cfgPayInfo').value = appConfig.payInfo || '';
+  document.getElementById('cfgQris').value = appConfig.qrisUrl || '';
+  document.getElementById('cfgWa').value = appConfig.waNumber || '';
+  if(unsubAdminSignups) unsubAdminSignups();
+  unsubAdminSignups = onSnapshot(collection(db, 'signups'), (snap)=>{
+    adminSignups = {};
+    snap.forEach(d => adminSignups[d.id] = d.data());
+    renderAdminLists();
+  }, ()=>{ document.getElementById('adminPendingList').innerHTML = '<div class="pw-note">Tidak bisa memuat daftar. Pastikan Firestore Rules sudah diperbarui.</div>'; });
+}
+
+function fmtTs(ts){
+  if(!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderAdminLists(){
+  const entries = Object.entries(adminSignups).sort((a,b)=>{
+    const ta = a[1].createdAt && a[1].createdAt.toMillis ? a[1].createdAt.toMillis() : 0;
+    const tb = b[1].createdAt && b[1].createdAt.toMillis ? b[1].createdAt.toMillis() : 0;
+    return tb - ta;
+  });
+  const pending = entries.filter(([,s]) => s.status !== 'active');
+  const active = entries.filter(([,s]) => s.status === 'active');
+  document.getElementById('adminPendingCount').textContent = pending.length;
+  document.getElementById('adminActiveCount').textContent = active.length;
+
+  document.getElementById('adminPendingList').innerHTML = pending.length ? pending.map(([uid, s]) => `
+    <div class="admin-item">
+      <div class="em">${esc(s.email)}${s.status === 'inactive' ? ' <span class="pill">nonaktif</span>' : ''}</div>
+      <div class="meta">Daftar ${fmtTs(s.createdAt)}${s.confirmedAt ? ' · konfirmasi ' + fmtTs(s.confirmedAt) : ' · belum konfirmasi'}</div>
+      ${s.confirmNote ? `<div class="meta">Catatan: ${esc(s.confirmNote)}</div>` : ''}
+      <div class="meta">ID: ${esc(uid)}</div>
+      <div class="acts">
+        <button style="background:var(--navy); color:#fff;" onclick="adminActivate('${uid}')">Aktifkan</button>
+        <button style="background:#F1F4F6; color:var(--muted);" onclick="adminDeleteSignup('${uid}')">Hapus</button>
+      </div>
+    </div>`).join('') : '<div class="pw-note" style="margin:4px 0 0;">Belum ada yang menunggu.</div>';
+
+  document.getElementById('adminActiveList').innerHTML = active.length ? active.map(([uid, s]) => `
+    <div class="admin-item">
+      <div class="em">${esc(s.email)}</div>
+      <div class="meta">Aktif sejak ${fmtTs(s.activatedAt)} · ID: ${esc(uid)}</div>
+      <div class="acts"><button style="background:#FDECEC; color:var(--red);" onclick="adminDeactivate('${uid}')">Nonaktifkan</button></div>
+    </div>`).join('') : '<div class="pw-note" style="margin:4px 0 0;">Belum ada pelanggan aktif.</div>';
+}
+
+window.saveAppConfig = async function(){
+  const data = {
+    price: parseInt(document.getElementById('cfgPrice').value) || 0,
+    payInfo: document.getElementById('cfgPayInfo').value.trim(),
+    qrisUrl: document.getElementById('cfgQris').value.trim(),
+    waNumber: document.getElementById('cfgWa').value.trim()
+  };
+  try{
+    await setDoc(doc(db, 'config', 'app'), data, { merge: true });
+    appConfig = { ...appConfig, ...data };
+    showToast('Harga & cara bayar disimpan ✓');
+  } catch(e){ showToast('Gagal menyimpan. Cek Firestore Rules.'); }
+}
+
+window.adminActivate = async function(uid){
+  const s = adminSignups[uid] || {};
+  if(!window.confirm(`Aktifkan ${s.email || uid}?\n\nPastikan pembayarannya sudah masuk.`)) return;
+  try{
+    await setDoc(doc(db, 'subscriptions', uid), { active: true, plan: 'lifetime', email: s.email || '', activatedAt: serverTimestamp() });
+    await updateDoc(doc(db, 'signups', uid), { status: 'active', activatedAt: serverTimestamp() });
+    showToast(`${s.email || 'Akun'} sudah aktif ✓`);
+  } catch(e){ showToast('Gagal mengaktifkan. Cek Firestore Rules.'); }
+}
+
+window.adminDeactivate = async function(uid){
+  const s = adminSignups[uid] || {};
+  if(!window.confirm(`Nonaktifkan ${s.email || uid}?\n\nDia tidak bisa menambah/mengubah data sampai diaktifkan lagi. Datanya tidak dihapus.`)) return;
+  try{
+    await setDoc(doc(db, 'subscriptions', uid), { active: false, deactivatedAt: serverTimestamp() }, { merge: true });
+    await updateDoc(doc(db, 'signups', uid), { status: 'inactive' });
+    showToast('Akun dinonaktifkan');
+  } catch(e){ showToast('Gagal. Cek Firestore Rules.'); }
+}
+
+window.adminDeleteSignup = async function(uid){
+  const s = adminSignups[uid] || {};
+  if(!window.confirm(`Hapus ${s.email || uid} dari daftar tunggu?\n\nKalau orangnya login lagi, dia akan muncul lagi di daftar.`)) return;
+  try{ await deleteDoc(doc(db, 'signups', uid)); showToast('Dihapus dari daftar'); }
+  catch(e){ showToast('Gagal. Cek Firestore Rules.'); }
+}
+
+showPriceHint();
 
 // ---------- MODE DEMO ----------
 // Semua data demo hidup di memori browser saja. Tidak ada yang dikirim ke Firebase,
